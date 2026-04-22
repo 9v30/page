@@ -432,6 +432,7 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const STORAGE_KEY = 'color_memory_sessions_v1';
+    const USER_STORAGE_KEY = 'memory_test_user_id';
 
     const CONFIG = {
       practiceTrials: 2,
@@ -480,6 +481,11 @@
     async function initApp() {
       await refreshStoredSessions();
 
+      const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+      if (savedUser) {
+        currentUserId = savedUser;
+      }
+
       if (!currentUserId) {
         renderUserInputScreen();
       } else {
@@ -496,7 +502,7 @@
             <div class="title">名前を入力</div>
             <div class="subtitle">ニックネームでもなんでも。<br>ここで入れた名前は識別にのみ使われます。</div>
 
-            <div class="input-card">
+            <form id="userForm" class="input-card">
               <input
                 id="userIdInput"
                 class="input-box"
@@ -506,11 +512,12 @@
                 spellcheck="false"
                 placeholder="名前"
                 maxlength="20"
+                enterkeyhint="done"
               />
               <div class="button-row">
-                <button class="button" id="userStartBtn">開始</button>
+                <button class="button" type="submit">開始</button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       `;
@@ -518,16 +525,14 @@
       const input = document.getElementById('userIdInput');
       input.focus();
 
-      const submit = () => {
+      document.getElementById('userForm').addEventListener('submit', (e) => {
+        e.preventDefault();
         const value = input.value.trim();
         if (!value) return;
-        currentUserId = value;
-        renderStartScreen();
-      };
 
-      document.getElementById('userStartBtn').addEventListener('click', submit);
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submit();
+        currentUserId = value;
+        localStorage.setItem(USER_STORAGE_KEY, value);
+        renderStartScreen();
       });
     }
 
@@ -548,7 +553,7 @@
 
             <div class="panel">
               <div class="small" style="margin-bottom: 12px;">
-                ${message ? escapeHtml(message) : 'ここに表示されるメッセージはデバッグ用なので見ないでいいです'}
+                ${message ? escapeHtml(message) : 'プレイが終わると、そのまま自動で保存されます。'}
               </div>
               <div class="button-row">
                 <button class="button" id="startBtn">スタート</button>
@@ -583,6 +588,7 @@
       document.getElementById('storageBtn').addEventListener('click', openStorageModal);
       document.getElementById('changeUserBtn').addEventListener('click', () => {
         currentUserId = null;
+        localStorage.removeItem(USER_STORAGE_KEY);
         renderUserInputScreen();
       });
     }
