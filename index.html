@@ -30,7 +30,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: sans-serif;
-      overflow: auto;
+      overflow: hidden;
     }
 
     #app {
@@ -736,18 +736,21 @@
             <div class="title">練習</div>
             <div class="subtitle">${practiceIndex} / ${CONFIG.practiceTrials} 問目</div>
 
-            <input
-              id="answerInput"
-              class="input-box"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              placeholder="8桁の数字"
-              maxlength="${CONFIG.digitLength}"
-            />
-            <div class="small">Enterで送信</div>
+            <form id="answerForm" class="input-card">
+              <input
+                id="answerInput"
+                class="input-box"
+                type="text"
+                inputmode="numeric"
+                enterkeyhint="done"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="8桁の数字"
+                maxlength="${CONFIG.digitLength}"
+              />
+              <button type="submit" class="button">送信</button>
+            </form>
           </div>
         </div>
       `;
@@ -766,8 +769,9 @@
         }
       };
 
-      document.getElementById('answerInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submit();
+      document.getElementById('answerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submit();
       });
 
       setTimeout(() => input.focus(), 0);
@@ -829,18 +833,21 @@
             <div class="title">入力してね</div>
             <div class="subtitle">${humanIndex} / ${CONFIG.mainTrials} 問目</div>
 
-            <input
-              id="answerInput"
-              class="input-box"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              placeholder="8桁の数字"
-              maxlength="${CONFIG.digitLength}"
-            />
-            <div class="small">Enterで送信</div>
+            <form id="answerForm" class="input-card">
+              <input
+                id="answerInput"
+                class="input-box"
+                type="text"
+                inputmode="numeric"
+                enterkeyhint="done"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="8桁の数字"
+                maxlength="${CONFIG.digitLength}"
+              />
+              <button type="submit" class="button">送信</button>
+            </form>
           </div>
         </div>
       `;
@@ -874,8 +881,9 @@
         }
       };
 
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submit();
+      document.getElementById('answerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submit();
       });
 
       setTimeout(() => input.focus(), 0);
