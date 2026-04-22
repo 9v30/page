@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>記憶力テスト</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: white;
+      --text: #111;
+      --muted: #666;
+      --accent: #2b6cff;
+      --accent2: #444;
+      --card: #f5f5f5;
+      --border: #ddd;
+      --overlay: rgba(0, 0, 0, 0.5);
+      --success: #0a7a26;
+      --danger: #b10000;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .tap-anywhere {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .center-wrap {
+      width: min(920px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .title {
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 2vw, 22px);
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .panel {
+      width: min(760px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .meta-box {
+      width: min(780px, 100%);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .meta-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+    }
+
+    .meta-line:last-child {
+      border-bottom: none;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .button {
+      border: none;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      background: var(--accent2);
+    }
+
+    .button.ghost {
+      background: white;
+      color: #222;
+      border: 1px solid #bbb;
+    }
+
+    .button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .big-number {
+      font-size: clamp(56px, 10vw, 120px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .progress-wrap {
+      width: min(720px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .countdown {
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .bar {
+      width: 100%;
+      height: 18px;
+      background: #e5e5e5;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #d0d0d0;
+    }
+
+    .bar-inner {
+      height: 100%;
+      width: 100%;
+      background: #111;
+      transform-origin: left center;
+    }
+
+    .input-box {
+      width: min(560px, 100%);
+      font-size: clamp(22px, 4vw, 34px);
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 2px solid #bbb;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.15em;
+      font-family: inherit;
+    }
+
+    .input-box:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(43, 108, 255, 0.12);
+    }
+
+    .top-info {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    .result-list {
+      width: min(780px, 100%);
+      max-height: 48vh;
+      overflow: auto;
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: white;
+      text-align: left;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: 90px 70px 1fr 110px;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #eee;
+      font-size: 15px;
+      align-items: center;
+    }
+
+    .result-row.header {
+      font-weight: 700;
+      background: #fafafa;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .good {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .bad {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: left;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .session-item {
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      background: white;
+      padding: 14px;
+      text-align: left;
+    }
+
+    .session-item-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .session-detail {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.7;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #f0f0f0;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .color-stats {
+      margin-bottom: 16px;
+    }
+
+    .color-stats-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .color-stat-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      background: white;
+      text-align: left;
+    }
+
+    .color-stat-name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .color-stat-detail {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.6;
+    }
+
+    .input-card {
+      width: min(420px, 100%);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 50;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(900px, 100%);
+      max-height: min(84vh, 900px);
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="storageModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="title" style="font-size: 24px;">保存データの統計</div>
+        <button class="button ghost" id="closeStorageModal">閉じる</button>
+      </div>
+      <div id="storageModalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+
+    const SUPABASE_URL = 'https://gwtxecczvegoxwiukcek.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3dHhlY2N6dmVnb3h3aXVrY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDAzMTMsImV4cCI6MjA5MjM3NjMxM30.m4LECATkLFiMFU1osuxRBt_lL0DcVBnPpYP4j0CB6Kg';
+    const { createClient } = window.supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const STORAGE_KEY = 'color_memory_sessions_v1';
+
+    const CONFIG = {
+      practiceTrials: 2,
+      mainTrials: 8,
+      digitLength: 8,
+      memorizeSeconds: 2,
+      colors: [
+        { key: 'black', label: '黒', css: 'black' },
+        { key: 'blue', label: '青', css: 'blue' },
+        { key: 'red', label: '赤', css: 'red' },
+        { key: 'green', label: '緑', css: 'green' },
+      ],
+    };
+
+    let currentUserId = null;
+    let currentTimer = null;
+    let currentPracticeStep = 0;
+    let currentMainIndex = 0;
+    let currentCorrect = '';
+    let currentSession = null;
+    let memorySessions = [];
+    let trials = [];
+    let practiceTrials = [];
+    let lastCompletedSession = null;
+    let storedSessionsCache = [];
+
+    const storageModal = document.getElementById('storageModal');
+    const storageModalBody = document.getElementById('storageModalBody');
+    const closeStorageModalBtn = document.getElementById('closeStorageModal');
+
+    closeStorageModalBtn.addEventListener('click', closeStorageModal);
+    storageModal.addEventListener('click', (e) => {
+      if (e.target === storageModal) closeStorageModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key === 'ArrowUp') {
+        const ok = confirm('保存されているデータをすべて削除しますか？');
+        if (ok) {
+          alert('Supabase上の削除はここでは実行していません。必要ならSQLで消してね。');
+        }
+      }
+    });
+
+    initApp();
+
+    async function initApp() {
+      await refreshStoredSessions();
+
+      if (!currentUserId) {
+        renderUserInputScreen();
+      } else {
+        renderStartScreen();
+      }
+    }
+
+    function renderUserInputScreen() {
+      clearTimer();
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="center-wrap">
+            <div class="title">名前を入力</div>
+            <div class="subtitle">ニックネームでもなんでも。<br>ここで入れた名前は識別にのみ使われます。</div>
+
+            <div class="input-card">
+              <input
+                id="userIdInput"
+                class="input-box"
+                type="text"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="名前"
+                maxlength="20"
+              />
+              <div class="button-row">
+                <button class="button" id="userStartBtn">開始</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const input = document.getElementById('userIdInput');
+      input.focus();
+
+      const submit = () => {
+        const value = input.value.trim();
+        if (!value) return;
+        currentUserId = value;
+        renderStartScreen();
+      };
+
+      document.getElementById('userStartBtn').addEventListener('click', submit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+      });
+    }
+
+    async function renderStartScreen(message = '') {
+      clearTimer();
+
+      await refreshStoredSessions();
+      const memoryCount = memorySessions.length;
+      const storedSessions = storedSessionsCache;
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="center-wrap">
+            <div class="title">記憶力テスト</div>
+            <div class="subtitle">
+              ユーザー: <b>${escapeHtml(currentUserId)}</b><br>
+              今のメモリ内セッション数: <b>${memoryCount}</b> / Supabase保存済み: <b>${storedSessions.length}</b>
+            </div>
+
+            <div class="panel">
+              <div class="small" style="margin-bottom: 12px;">
+                ${message ? escapeHtml(message) : 'もしよかったら、プレイした後にセッションを保存を押してデータ保存にご協力ください'}
+              </div>
+              <div class="button-row">
+                <button class="button" id="startBtn">スタート</button>
+                <button class="button secondary" id="saveBtn" ${memoryCount === 0 ? 'disabled' : ''}>セッションを保存</button>
+                <button class="button ghost" id="storageBtn">保存データを見る</button>
+                <button class="button ghost" id="changeUserBtn">ユーザー変更</button>
+              </div>
+            </div>
+
+            <div class="meta-box">
+              <div class="meta-line">
+                <div>練習</div>
+                <div>${CONFIG.practiceTrials} 問</div>
+              </div>
+              <div class="meta-line">
+                <div>本番</div>
+                <div>${CONFIG.mainTrials} 問</div>
+              </div>
+              <div class="meta-line">
+                <div>表示時間</div>
+                <div>${CONFIG.memorizeSeconds} 秒</div>
+              </div>
+              <div class="meta-line">
+                <div>色</div>
+                <div>${CONFIG.colors.map(c => c.label).join(' / ')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('startBtn').addEventListener('click', renderIntroScreen);
+      document.getElementById('saveBtn').addEventListener('click', async () => {
+        const result = await saveMemorySessionsToSupabase();
+        await renderStartScreen(result);
+      });
+      document.getElementById('storageBtn').addEventListener('click', openStorageModal);
+      document.getElementById('changeUserBtn').addEventListener('click', () => {
+        currentUserId = null;
+        renderUserInputScreen();
+      });
+    }
+
+    function renderIntroScreen() {
+      clearTimer();
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="tap-anywhere" id="tapArea">
+            <div class="center-wrap">
+              <div class="title">これから8桁の数字を覚えてもらいます</div>
+              <div class="subtitle">
+                最初に練習が <b>${CONFIG.practiceTrials}回</b> あります。<br>
+                完答じゃなくても部分点あるから頑張ってね
+              </div>
+              <div class="panel">
+                <div class="small">準備ができたら、画面のどこでも押して開始</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('tapArea').addEventListener('click', startExperiment);
+    }
+
+    function startExperiment() {
+      currentSession = createNewSession();
+      currentPracticeStep = 0;
+      currentMainIndex = 0;
+
+      practiceTrials = buildPracticeTrials();
+      trials = buildMainTrials();
+
+      showPracticeMemorizeScene(practiceTrials[currentPracticeStep], currentPracticeStep + 1);
+    }
+
+    function createNewSession() {
+      return {
+        id: makeSessionId(),
+        userId: currentUserId,
+        startedAt: new Date().toISOString(),
+        endedAt: null,
+        config: {
+          practiceTrials: CONFIG.practiceTrials,
+          mainTrials: CONFIG.mainTrials,
+          digitLength: CONFIG.digitLength,
+          memorizeSeconds: CONFIG.memorizeSeconds,
+          colors: CONFIG.colors.map(c => c.label),
+        },
+        trials: [],
+        summary: null,
+      };
+    }
+
+    function makeSessionId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'session_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+    }
+
+    function buildMainTrials() {
+      const plan = [];
+      const repeats = Math.floor(CONFIG.mainTrials / CONFIG.colors.length);
+      const remainder = CONFIG.mainTrials % CONFIG.colors.length;
+
+      for (let i = 0; i < repeats; i++) {
+        CONFIG.colors.forEach(c => plan.push(c));
+      }
+
+      const shuffledColors = shuffle(CONFIG.colors);
+      for (let i = 0; i < remainder; i++) {
+        plan.push(shuffledColors[i]);
+      }
+
+      return shuffle(plan);
+    }
+
+    function buildPracticeTrials() {
+      const plan = [];
+      for (let i = 0; i < CONFIG.practiceTrials; i++) {
+        plan.push({
+          key: 'practice',
+          label: '練習',
+          css: '#666666',
+          isPractice: true,
+        });
+      }
+      return plan;
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function showPracticeMemorizeScene(trial, practiceIndex) {
+      clearTimer();
+      currentCorrect = generateNumber(CONFIG.digitLength);
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="top-info">
+            練習 ${practiceIndex} / ${CONFIG.practiceTrials}<br>
+            色: ${trial.label}<br>
+            表示時間: ${CONFIG.memorizeSeconds}秒
+          </div>
+
+          <div class="center-wrap">
+            <div class="subtitle">練習用の数字</div>
+            <div class="big-number" style="color: ${trial.css};">${currentCorrect}</div>
+
+            <div class="progress-wrap">
+              <div class="countdown" id="countdown">${CONFIG.memorizeSeconds}</div>
+              <div class="bar">
+                <div class="bar-inner" id="barInner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const countdownEl = document.getElementById('countdown');
+      const barInner = document.getElementById('barInner');
+
+      const totalMs = CONFIG.memorizeSeconds * 1000;
+      const start = performance.now();
+
+      currentTimer = setInterval(() => {
+        const elapsed = performance.now() - start;
+        const remainMs = Math.max(0, totalMs - elapsed);
+        const remainSec = Math.ceil(remainMs / 1000);
+
+        countdownEl.textContent = remainSec;
+        barInner.style.transform = `scaleX(${remainMs / totalMs})`;
+
+        if (remainMs <= 0) {
+          clearTimer();
+          showPracticeInputScene(trial, practiceIndex);
+        }
+      }, 33);
+    }
+
+    function showPracticeInputScene(trial, practiceIndex) {
+      clearTimer();
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="center-wrap">
+            <div class="title">練習</div>
+            <div class="subtitle">${practiceIndex} / ${CONFIG.practiceTrials} 問目</div>
+
+            <input
+              id="answerInput"
+              class="input-box"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="8桁の数字"
+              maxlength="${CONFIG.digitLength}"
+            />
+            <div class="small">Enterで送信</div>
+          </div>
+        </div>
+      `;
+
+      const input = document.getElementById('answerInput');
+      input.focus();
+
+      const submit = () => {
+        currentPracticeStep += 1;
+
+        if (currentPracticeStep < practiceTrials.length) {
+          showPracticeMemorizeScene(practiceTrials[currentPracticeStep], currentPracticeStep + 1);
+        } else {
+          currentMainIndex = 0;
+          showMemorizeScene(trials[currentMainIndex], 1);
+        }
+      };
+
+      document.getElementById('answerInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+      });
+
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function showMemorizeScene(trial, humanIndex) {
+      clearTimer();
+      currentCorrect = generateNumber(CONFIG.digitLength);
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="top-info">
+            ${humanIndex} / ${CONFIG.mainTrials}<br>
+            色: ${trial.label}<br>
+            表示時間: ${CONFIG.memorizeSeconds}秒
+          </div>
+
+          <div class="center-wrap">
+            <div class="subtitle">8桁の数字を覚える</div>
+            <div class="big-number" style="color: ${trial.css};">${currentCorrect}</div>
+
+            <div class="progress-wrap">
+              <div class="countdown" id="countdown">${CONFIG.memorizeSeconds}</div>
+              <div class="bar">
+                <div class="bar-inner" id="barInner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const countdownEl = document.getElementById('countdown');
+      const barInner = document.getElementById('barInner');
+
+      const totalMs = CONFIG.memorizeSeconds * 1000;
+      const start = performance.now();
+
+      currentTimer = setInterval(() => {
+        const elapsed = performance.now() - start;
+        const remainMs = Math.max(0, totalMs - elapsed);
+        const remainSec = Math.ceil(remainMs / 1000);
+
+        countdownEl.textContent = remainSec;
+        barInner.style.transform = `scaleX(${remainMs / totalMs})`;
+
+        if (remainMs <= 0) {
+          clearTimer();
+          showInputScene(trial, humanIndex);
+        }
+      }, 33);
+    }
+
+    function showInputScene(trial, humanIndex) {
+      clearTimer();
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="center-wrap">
+            <div class="title">入力してね</div>
+            <div class="subtitle">${humanIndex} / ${CONFIG.mainTrials} 問目</div>
+
+            <input
+              id="answerInput"
+              class="input-box"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="8桁の数字"
+              maxlength="${CONFIG.digitLength}"
+            />
+            <div class="small">Enterで送信</div>
+          </div>
+        </div>
+      `;
+
+      const input = document.getElementById('answerInput');
+      input.focus();
+
+      const submit = () => {
+        const answer = input.value.trim().replace(/\D/g, '').slice(0, CONFIG.digitLength);
+        const score = getSamePositionScore(currentCorrect, answer);
+        const exact = answer === currentCorrect;
+
+        currentSession.trials.push({
+          trialNo: currentSession.trials.length + 1,
+          userId: currentUserId,
+          colorLabel: trial.label,
+          colorKey: trial.key,
+          correct: currentCorrect,
+          input: answer,
+          score,
+          exact,
+        });
+
+        currentMainIndex += 1;
+
+        if (currentMainIndex < trials.length) {
+          showMemorizeScene(trials[currentMainIndex], currentMainIndex + 1);
+        } else {
+          finishSession();
+          showResultScene(lastCompletedSession);
+        }
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+      });
+
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function finishSession() {
+      currentSession.endedAt = new Date().toISOString();
+
+      const totalScore = currentSession.trials.reduce((sum, t) => sum + t.score, 0);
+      const exactCount = currentSession.trials.filter(t => t.exact).length;
+
+      currentSession.summary = {
+        totalScore,
+        exactCount,
+        avgScore: Number((totalScore / currentSession.trials.length).toFixed(2)),
+        maxScore: currentSession.trials.length * CONFIG.digitLength,
+      };
+
+      lastCompletedSession = currentSession;
+      memorySessions.push(currentSession);
+      currentSession = null;
+    }
+
+    function showResultScene(session) {
+      clearTimer();
+
+      const rows = session.trials.map(t => `
+        <div class="result-row">
+          <div>${t.trialNo}問目</div>
+          <div>${t.colorLabel}</div>
+          <div>${t.correct} → ${t.input || '未入力'}</div>
+          <div class="${t.exact ? 'good' : 'bad'}">${t.score} / ${CONFIG.digitLength}</div>
+        </div>
+      `).join('');
+
+      app.innerHTML = `
+        <div class="screen">
+          <div class="center-wrap">
+            <div class="title">結果</div>
+            <div class="subtitle">
+              完全正解: <b>${session.summary.exactCount}</b> / ${session.trials.length}<br>
+              平均一致桁数: <b>${session.summary.avgScore}</b> / ${CONFIG.digitLength}<br>
+              合計一致桁数: <b>${session.summary.totalScore}</b> / ${session.summary.maxScore}
+            </div>
+
+            <div class="result-list">
+              <div class="result-row header">
+                <div>試行</div>
+                <div>色</div>
+                <div>正解 → 入力</div>
+                <div>一致数</div>
+              </div>
+              ${rows}
+            </div>
+
+            <div class="button-row">
+              <button class="button" id="restartBtn">もう一回</button>
+              <button class="button secondary" id="saveBtn2">セッションを保存</button>
+              <button class="button ghost" id="storageBtn2">保存データを見る</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('restartBtn').addEventListener('click', renderStartScreen);
+      document.getElementById('saveBtn2').addEventListener('click', async () => {
+        const result = await saveMemorySessionsToSupabase();
+        await renderStartScreen(result);
+      });
+      document.getElementById('storageBtn2').addEventListener('click', openStorageModal);
+    }
+
+    function generateNumber(length = 8) {
+      let result = '';
+
+      while (result.length < length) {
+        const digit = String(Math.floor(Math.random() * 10));
+        if (result.length > 0 && result[result.length - 1] === digit) continue;
+        result += digit;
+      }
+
+      if (isTooSimple(result)) {
+        return generateNumber(length);
+      }
+
+      return result;
+    }
+
+    function isTooSimple(num) {
+      let asc = true;
+      let desc = true;
+
+      for (let i = 1; i < num.length; i++) {
+        const prev = Number(num[i - 1]);
+        const cur = Number(num[i]);
+
+        if (cur !== prev + 1) asc = false;
+        if (cur !== prev - 1) desc = false;
+      }
+
+      if (asc || desc) return true;
+
+      for (let i = 0; i < num.length - 2; i++) {
+        if (num[i] === num[i + 1] && num[i] === num[i + 2]) return true;
+      }
+
+      return false;
+    }
+
+    function getSamePositionScore(correct, input) {
+      let score = 0;
+      for (let i = 0; i < correct.length; i++) {
+        if (correct[i] === input[i]) score++;
+      }
+      return score;
+    }
+
+    async function refreshStoredSessions() {
+      const { data, error } = await sb
+        .from('memory_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        storedSessionsCache = [];
+        return [];
+      }
+
+      storedSessionsCache = (data ?? []).map((row) => row.data ?? row);
+      return storedSessionsCache;
+    }
+
+    async function saveMemorySessionsToSupabase() {
+      if (memorySessions.length === 0) {
+        return '保存するメモリ内セッションがない。';
+      }
+
+      const rows = memorySessions.map((session) => ({
+        user_id: session.userId ?? 'unknown',
+        data: session,
+      }));
+
+      const { error } = await sb.from('memory_sessions').insert(rows);
+
+      if (error) {
+        console.error(error);
+        return 'Supabase への保存に失敗した。';
+      }
+
+      const savedCount = memorySessions.length;
+      memorySessions = [];
+      await refreshStoredSessions();
+
+      return `セッション ${savedCount} 件を Supabase に保存して、メモリから消した。`;
+    }
+
+    function buildColorStats(sessions) {
+      const map = {};
+
+      for (const c of CONFIG.colors) {
+        map[c.key] = {
+          key: c.key,
+          label: c.label,
+          trials: 0,
+          exact: 0,
+          totalScore: 0,
+        };
+      }
+
+      for (const s of sessions) {
+        for (const t of (s.trials || [])) {
+          const key = t.colorKey;
+          if (!map[key]) {
+            map[key] = {
+              key,
+              label: t.colorLabel || key,
+              trials: 0,
+              exact: 0,
+              totalScore: 0,
+            };
+          }
+
+          map[key].trials += 1;
+          map[key].exact += t.exact ? 1 : 0;
+          map[key].totalScore += t.score || 0;
+        }
+      }
+
+      return CONFIG.colors.map(c => {
+        const item = map[c.key] || {
+          key: c.key,
+          label: c.label,
+          trials: 0,
+          exact: 0,
+          totalScore: 0,
+        };
+
+        return {
+          label: item.label,
+          trials: item.trials,
+          exact: item.exact,
+          avg: item.trials === 0 ? '0.00' : (item.totalScore / item.trials).toFixed(2),
+          rate: item.trials === 0 ? '0.0' : ((item.exact / item.trials) * 100).toFixed(1),
+        };
+      });
+    }
+
+    function buildStorageSummary(sessions) {
+      let totalTrials = 0;
+      let totalExact = 0;
+      let totalScore = 0;
+      let bestScore = 0;
+      let latestEndedAtMs = -1;
+      let latestEndedAtLabel = '-';
+
+      for (const s of sessions) {
+        const trials = s.trials || [];
+        const summary = s.summary || {};
+
+        totalTrials += trials.length;
+        totalExact += summary.exactCount || 0;
+        totalScore += summary.totalScore || 0;
+
+        if ((summary.totalScore || 0) > bestScore) {
+          bestScore = summary.totalScore || 0;
+        }
+
+        if (s.endedAt) {
+          const ms = new Date(s.endedAt).getTime();
+          if (!Number.isNaN(ms) && ms > latestEndedAtMs) {
+            latestEndedAtMs = ms;
+            latestEndedAtLabel = formatDateTime(s.endedAt);
+          }
+        }
+      }
+
+      return {
+        sessionCount: sessions.length,
+        totalTrials,
+        exactCount: totalExact,
+        avgScore: totalTrials === 0 ? '0.00' : (totalScore / totalTrials).toFixed(2),
+        bestScore,
+        maxScore: sessions.reduce((sum, s) => sum + ((s.trials?.length || 0) * CONFIG.digitLength), 0),
+        latestEndedAt: latestEndedAtLabel,
+      };
+    }
+
+    async function openStorageModal() {
+      await refreshStoredSessions();
+      const storedSessions = storedSessionsCache;
+
+      if (storedSessions.length === 0) {
+        storageModalBody.innerHTML = `
+          <div class="meta-box">
+            まだ保存されたセッションはない。
+          </div>
+        `;
+        storageModal.classList.add('open');
+        storageModal.setAttribute('aria-hidden', 'false');
+        return;
+      }
+
+      const summary = buildStorageSummary(storedSessions);
+      const colorStats = buildColorStats(storedSessions);
+
+      const colorStatsHtml = colorStats.map(c => `
+        <div class="color-stat-row">
+          <div class="color-stat-name">${c.label}</div>
+          <div class="color-stat-detail">
+            試行 ${c.trials} 回 / 完全正解 ${c.exact} 回 / 平均一致桁数 ${c.avg} / 正解率 ${c.rate}%
+          </div>
+        </div>
+      `).join('');
+
+      const sessionsHtml = storedSessions
+        .slice()
+        .reverse()
+        .map((s, index) => {
+          const ended = s.endedAt ? formatDateTime(s.endedAt) : '未完了';
+          const avg = s.summary?.avgScore ?? 0;
+          const exact = s.summary?.exactCount ?? 0;
+          const total = s.trials?.length ?? 0;
+          const label = `セッション ${storedSessions.length - index}`;
+          const user = s.userId ?? '-';
+
+          return `
+            <div class="session-item">
+              <div class="session-item-header">
+                <div>${label}</div>
+                <div class="badge">${ended}</div>
+              </div>
+              <div class="session-detail">
+                ユーザー: ${escapeHtml(user)}<br>
+                回数: ${total} 問<br>
+                完全正解: ${exact} 回<br>
+                平均一致桁数: ${avg} / ${CONFIG.digitLength}<br>
+                色: ${(s.config?.colors || []).join(' / ')}
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      storageModalBody.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">保存セッション数</div>
+            <div class="stat-value">${summary.sessionCount}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">総試行回数</div>
+            <div class="stat-value">${summary.totalTrials}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">完全正解数</div>
+            <div class="stat-value">${summary.exactCount}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">平均一致桁数</div>
+            <div class="stat-value">${summary.avgScore}</div>
+          </div>
+        </div>
+
+        <div class="meta-box" style="margin-bottom: 12px;">
+          <div class="meta-line">
+            <div>最高スコア</div>
+            <div>${summary.bestScore} / ${summary.maxScore}</div>
+          </div>
+          <div class="meta-line">
+            <div>直近の保存日時</div>
+            <div>${summary.latestEndedAt}</div>
+          </div>
+          <div class="meta-line">
+            <div>保存先</div>
+            <div>${STORAGE_KEY}</div>
+          </div>
+        </div>
+
+        <div class="meta-box color-stats">
+          <div class="title" style="font-size: 18px; margin-bottom: 10px;">色ごとの成績</div>
+          <div class="color-stats-list">
+            ${colorStatsHtml}
+          </div>
+        </div>
+
+        <div class="title" style="font-size: 18px; margin: 14px 0 10px;">セッション一覧</div>
+        <div class="session-list">
+          ${sessionsHtml}
+        </div>
+      `;
+
+      storageModal.classList.add('open');
+      storageModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeStorageModal() {
+      storageModal.classList.remove('open');
+      storageModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function formatDateTime(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '-';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${y}/${m}/${day} ${h}:${min}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function clearTimer() {
+      if (currentTimer) {
+        clearInterval(currentTimer);
+        currentTimer = null;
+      }
+    }
+  </script>
+</body>
+</html>
