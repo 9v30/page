@@ -1168,7 +1168,7 @@
           const avg = s.summary?.avgScore ?? 0;
           const exact = s.summary?.exactCount ?? 0;
           const total = s.trials?.length ?? 0;
-          const label = `セッション ${storedSessions.length - index}`;
+          const label = `セッション ${index+1}`;
           const user = s.userId ?? '-';
 
           return `
